@@ -43,6 +43,10 @@ class Robot {
         this.MMP = Matrix(M, M, 0);
     }
 
+    setMarkovMatrixP(MMP) {
+        this.MMP = MMP;
+    }
+
     /**
      *
      * @param {Robot} r

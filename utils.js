@@ -70,14 +70,11 @@ function get_initial_data(robots) {
  *
  * @param {[Robot]} robots
  */
-function get_markov_matrix([Robot]) {
+function get_markov_matrix(robots) {
     let arr = [];
 
-    for (let r of robots) {
-        arr.push({
-            x: r.x,
-            y: r.y
-        });
+    for (let ri of robots) {
+        arr.push(ri.MMP);
     }
 
     return arr;
