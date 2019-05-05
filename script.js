@@ -5,7 +5,7 @@ let r;
 let robots = new Array(robot_count);
 let steps = 20;
 let collision = false;
-let phase = 2;
+let phase = 1;
 let cells = Matrix(3, 3);
 
 let canvas_width = 1280;
@@ -63,6 +63,7 @@ function draw() {
 }
 
 const M = 9;
+let collision_probability = Array(M).fill(0);
 
 function compute_distribution() {
     const distribution = Array(M).fill(0);
@@ -94,6 +95,14 @@ function phase1() {
         const dy = random.integer(-steps, steps);
         ri.move(dx, dy);
         if (show_robots) ri.draw();
+        for (let rj of robots) {
+            if (ri.id === rj.id)
+                continue;
+            
+            if (ri.collision(rj)) {
+                collision_probability[check_area(ri) - 1]++;
+            }
+        }
     }
 
     if (iter_count === max_iter) {
