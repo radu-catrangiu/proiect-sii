@@ -11,7 +11,7 @@ document.addEventListener('keydown', ev => {
     }
 });
 
-document.addEventListener('mousedown',ev => {
+document.addEventListener('mousedown', ev => {
     show_robots = !show_robots;
 });
 
@@ -78,4 +78,8 @@ function get_markov_matrix(robots) {
     }
 
     return arr;
+}
+
+function print_to_div(text) {
+    document.getElementById('print').innerHTML = text;
 }

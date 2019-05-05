@@ -11,12 +11,18 @@ let cells = Matrix(3, 3);
 let canvas_width = 1280;
 let canvas_height = 720;
 function setup() {
-    createCanvas(canvas_width, canvas_height);
+    let canvas = createCanvas(canvas_width, canvas_height);
+    canvas.parent('sim-holder');
     background(200, 200, 200);
     frameRate(500);
 
-    r = new Robot(canvas_width / 2, canvas_height / 2);
+    r = new Robot(robot_count, canvas_width / 2, canvas_height / 2);
     r.setSpace(canvas_width, canvas_height);
+    r.setMarkovMatrixP(
+        init_data.MMPs[robot_count],
+        init_data.M,
+        init_data.MMP_iters
+    );
 
     for (let i = 0; i < robot_count; i++) {
         // let x = random.integer(0, canvas_width);
@@ -24,10 +30,13 @@ function setup() {
         let x = init_data.robots[i].x;
         let y = init_data.robots[i].y;
         let clr = color(...init_data.colors[i]);
-        robots[i] = new Robot(x, y, clr);
+        robots[i] = new Robot(i, x, y, clr);
         robots[i].setSpace(canvas_width, canvas_height);
-        robots[i].setMarkovMatrixP(init_data.MMPs[i], init_data.M);
-        // robots[i].draw();
+        robots[i].setMarkovMatrixP(
+            init_data.MMPs[i],
+            init_data.M,
+            init_data.MMP_iters
+        );
     }
 
     robots.push(r);
@@ -92,29 +101,47 @@ function phase1() {
         for (let ri of robots) {
             ri.draw();
         }
-        // phase = 2;
+        phase = 2;
     }
 }
 
 function phase2() {
-    // if (collision) return;
+    if (frameCount % 100 === 0) {
+        print_to_div(get_estimated_cells());
+    }
+
     draw_bg();
 
-    const dx = random.integer(-steps, steps);
-    const dy = random.integer(-steps, steps);
-    r.move(dx, dy);
-    r.draw();
-
-    for (let i = 0; i < robot_count; i++) {
+    for (let i = 0; i < robots.length; i++) {
         const dx = random.integer(-steps, steps);
         const dy = random.integer(-steps, steps);
         robots[i].move(dx, dy);
         robots[i].draw();
     }
 
-    for (let i = 0; i < robot_count; i++) {
+    for (let i = 0; i < robots.length; i++) {
         if (r.collision(robots[i])) {
             collision = true;
         }
     }
+}
+
+function get_estimated_cells() {
+    let arr = [];
+    let res = [];
+    for (let ri of robots) {
+        arr.push(`<b>${ri.id}</b> : ${ri.estimated_cell}`);
+    }
+
+    for (let i = 0; i < robots.length / 10; i++) {
+        res.push(
+            arr
+                .slice(i * 10, (i + 1) * 10)
+                .join(
+                    '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                )
+        );
+    }
+
+    return res.join('<br>');
 }
