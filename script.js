@@ -5,7 +5,7 @@ let r;
 let robots = new Array(robot_count);
 let steps = 20;
 let collision = false;
-let phase = 1;
+let phase = 2;
 let cells = Matrix(3, 3);
 
 let canvas_width = 1280;
@@ -26,6 +26,7 @@ function setup() {
         let clr = color(...init_data.colors[i]);
         robots[i] = new Robot(x, y, clr);
         robots[i].setSpace(canvas_width, canvas_height);
+        robots[i].setMarkovMatrixP(init_data.MMPs[i], init_data.M);
         // robots[i].draw();
     }
 

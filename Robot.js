@@ -40,11 +40,17 @@ class Robot {
     }
 
     initMarkovMatrixP (M) {
-        this.MMP = Matrix(M, M, 0);
+        if (!this.MMP)
+            this.MMP = Matrix(M, M, 0);
     }
 
-    setMarkovMatrixP(MMP) {
-        this.MMP = MMP;
+    setMarkovMatrixP(MMP, M) {
+        this.MMP = Matrix(M, M, 0);
+        for (let i = 0; i < M; i++) {
+            for (let j = 0; j < M; j++) {
+                this.MMP[i][j] = MMP[i][j];
+            }
+        }
     }
 
     /**
