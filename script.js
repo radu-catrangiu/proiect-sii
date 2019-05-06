@@ -1,11 +1,11 @@
 const random = new Random();
+let phase = 2;
 
 let robot_count = 50;
 let r;
 let robots = new Array(robot_count);
 let steps = 20;
 let collision = false;
-let phase = 1;
 let cells = Matrix(3, 3);
 
 let canvas_width = 1280;
@@ -16,17 +16,7 @@ function setup() {
     background(200, 200, 200);
     frameRate(500);
 
-    r = new Robot(robot_count, canvas_width / 2, canvas_height / 2);
-    r.setSpace(canvas_width, canvas_height);
-    r.setMarkovMatrixP(
-        init_data.MMPs[robot_count],
-        init_data.M,
-        init_data.MMP_iters
-    );
-
     for (let i = 0; i < robot_count; i++) {
-        // let x = random.integer(0, canvas_width);
-        // let y = random.integer(0, canvas_height);
         let x = init_data.robots[i].x;
         let y = init_data.robots[i].y;
         let clr = color(...init_data.colors[i]);
@@ -37,8 +27,17 @@ function setup() {
             init_data.M,
             init_data.MMP_iters
         );
+        robots[i].initCollisionProbability(init_data.collision_probability);
     }
 
+    r = new Robot(robot_count, canvas_width / 2, canvas_height / 2);
+    r.setSpace(canvas_width, canvas_height);
+    r.setMarkovMatrixP(
+        init_data.MMPs[robot_count],
+        init_data.M,
+        init_data.MMP_iters
+    );
+    r.initCollisionProbability(init_data.collision_probability);
     robots.push(r);
 
     let k = 1;
@@ -49,6 +48,7 @@ function setup() {
     }
 
     compute_distribution();
+    init_algorithm();
 }
 
 function draw() {
@@ -74,10 +74,16 @@ function compute_distribution() {
         distribution[check_area(robots[i]) - 1] += 1 / (robot_count + 1);
     }
 
-    for (let r of robots) {
-        r.initDistribution(distribution);
-        r.initCellSizes(cell_sizes);
-        r.initMarkovMatrixP(M);
+    for (let ri of robots) {
+        ri.initDistribution(distribution);
+        ri.initCellSizes(cell_sizes);
+        ri.initMarkovMatrixP(M);
+    }
+}
+
+function init_algorithm() {
+    for (let ri of robots) {
+        ri.initAlpha(robots, M);
     }
 }
 
@@ -96,9 +102,8 @@ function phase1() {
         ri.move(dx, dy);
         if (show_robots) ri.draw();
         for (let rj of robots) {
-            if (ri.id === rj.id)
-                continue;
-            
+            if (ri.id === rj.id) continue;
+
             if (ri.collision(rj)) {
                 collision_probability[check_area(ri) - 1]++;
             }
@@ -115,23 +120,26 @@ function phase1() {
 }
 
 function phase2() {
-    if (frameCount % 100 === 0) {
+    if (frameCount % 10 === 0) {
         print_to_div(get_estimated_cells());
     }
 
     draw_bg();
 
-    for (let i = 0; i < robots.length; i++) {
-        const dx = random.integer(-steps, steps);
-        const dy = random.integer(-steps, steps);
-        robots[i].move(dx, dy);
-        robots[i].draw();
+    for (let ri of robots) {
+        ri.computeCellEstimateProbability();
+        ri.computeEstimatedCell();
     }
 
-    for (let i = 0; i < robots.length; i++) {
-        if (r.collision(robots[i])) {
-            collision = true;
-        }
+    for (let ri of robots) {
+        const dx = random.integer(-steps, steps);
+        const dy = random.integer(-steps, steps);
+        ri.move(dx, dy);
+        ri.draw();
+    }
+
+    for (let ri of robots) {
+        ri.computeAlpha(robots, M);
     }
 }
 
@@ -139,7 +147,11 @@ function get_estimated_cells() {
     let arr = [];
     let res = [];
     for (let ri of robots) {
-        arr.push(`<b>${ri.id}</b> : ${ri.estimated_cell}`);
+        let real_area = check_area(ri);
+        let tag1 = ri.estimated_cell === real_area ? '<u>' : '';
+        let tag2 = ri.estimated_cell === real_area ? '</u>' : '';
+        let str = `<b>${ri.id}</b> : ${ri.estimated_cell} vs ${real_area}`;
+        arr.push(tag1 + str + tag2);
     }
 
     for (let i = 0; i < robots.length / 10; i++) {

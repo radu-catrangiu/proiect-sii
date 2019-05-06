@@ -6,6 +6,7 @@ class Robot {
         this.radius = 15;
         this.clr = clr || color(255, 255, 255);
         this.estimated_cell = -1;
+        this.G = null;
     }
 
     setSpace(width, height) {
@@ -40,17 +41,32 @@ class Robot {
         this.old_area = 0;
     }
 
-    initDistribution (distribution) {
+    initDistribution(distribution) {
         this.distribution = distribution;
     }
 
-    initCellSizes (cellSizes) {
+    initCollisionProbability(CP) {
+        this.CP = CP;
+    }
+
+    initCellEstimateProbability(M) {
+        this.CEP = Array(M).fill(0);
+    }
+
+    initAlpha(robots, M) {
+        this.alpha = Array(M).fill(0);
+        this.computeG(robots, M);
+        for (let cell = 0; cell < M; cell++) {
+            this.alpha[cell] = this.G[cell] * this.distribution[cell];
+        }
+    }
+
+    initCellSizes(cellSizes) {
         this.cellSizes = cellSizes;
     }
 
-    initMarkovMatrixP (M) {
-        if (!this.MMP)
-            this.MMP = Matrix(M, M, 0);
+    initMarkovMatrixP(M) {
+        if (!this.MMP) this.MMP = Matrix(M, M, 0);
     }
 
     setMarkovMatrixP(MMP, M, MMP_iters) {
@@ -60,6 +76,49 @@ class Robot {
                 this.MMP[i][j] = MMP[i][j] / MMP_iters;
             }
         }
+    }
+
+    computeAlpha(robots, M) {
+        this.computeG(robots, M);
+        let newAlpha = Array(M);
+        for (let i = 0; i < M; i++) {
+            let sum = 0;
+            for (let j = 0; j < M; j++) {
+                sum += this.alpha[j] * this.MMP[i][j];
+            }
+            newAlpha[i] = sum * this.G[i];
+        }
+        this.alpha = newAlpha;
+    }
+
+    computeG(robots, M) {
+        //Check for colision
+        let collision = false;
+        for (let ri of robots) {
+            if (ri.id === this.id) continue;
+            if (this.collision(ri)) {
+                collision = true;
+                break;
+            }
+        }
+
+        this.G = Array(M);
+        for (let i = 0; i < M; i++) {
+            if (collision) {
+                this.G[i] = this.CP[i];
+            } else {
+                this.G[i] = 1 - this.CP[i];
+            }
+        }
+    }
+
+    computeCellEstimateProbability() {
+        let alphaSum = this.alpha.reduce((acc, x) => x+acc, 0);
+        this.CEP = this.alpha.map(e => e/alphaSum);
+    }
+
+    computeEstimatedCell() {
+        this.estimated_cell = indexOfMax(this.CEP) + 1;
     }
 
     /**

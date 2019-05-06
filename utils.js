@@ -31,8 +31,8 @@ function check_area(r) {
 
 function draw_bg() {
     background(200);
-    for (var x = 0; x < width; x += width / 3) {
-        for (var y = 0; y < height; y += height / 3) {
+    for (let x = 0; x < width; x += width / 3) {
+        for (let y = 0; y < height; y += height / 3) {
             stroke(0);
             strokeWeight(1);
             line(x, 0, x, height);
@@ -40,8 +40,8 @@ function draw_bg() {
         }
     }
     let i = 1;
-    for (var y = 0; y < height; y += height / 3) {
-        for (var x = 0; x < width; x += width / 3) {
+    for (let y = 0; y < height; y += height / 3) {
+        for (let x = 0; x < width; x += width / 3) {
             let s = 'Area ' + i++;
             fill(50);
             text(s, x + 25, y + 25);
@@ -82,4 +82,22 @@ function get_markov_matrix(robots) {
 
 function print_to_div(text) {
     document.getElementById('print').innerHTML = text;
+}
+
+function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    let max = arr[0];
+    let maxIndex = 0;
+
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
 }
