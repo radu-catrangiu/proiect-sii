@@ -87,6 +87,8 @@ class Robot {
                 sum += this.alpha[j] * this.MMP[i][j];
             }
             newAlpha[i] = sum * this.G[i];
+            if (newAlpha[i] < 0.01) newAlpha[i] *= 100;
+            else if (newAlpha[i] >= 1) newAlpha[i] /= 100;
         }
         this.alpha = newAlpha;
     }
@@ -113,8 +115,8 @@ class Robot {
     }
 
     computeCellEstimateProbability() {
-        let alphaSum = this.alpha.reduce((acc, x) => x+acc, 0);
-        this.CEP = this.alpha.map(e => e/alphaSum);
+        let alphaSum = this.alpha.reduce((acc, x) => x + acc, 0);
+        this.CEP = this.alpha.map(e => e / alphaSum);
     }
 
     computeEstimatedCell() {
