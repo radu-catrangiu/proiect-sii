@@ -7,6 +7,7 @@ let robots = new Array(robot_count);
 let steps = 20;
 let collision = false;
 let cells = Matrix(3, 3);
+let unstable_phase = true;
 
 let canvas_width = 1280;
 let canvas_height = 720;
@@ -15,6 +16,9 @@ function setup() {
     canvas.parent('sim-holder');
     background(200, 200, 200);
     frameRate(500);
+    setTimeout(() => {
+        unstable_phase = false;
+    }, 10000);
 
     for (let i = 0; i < robot_count; i++) {
         let x = init_data.robots[i].x;
@@ -127,19 +131,24 @@ function phase2() {
     draw_bg();
 
     for (let ri of robots) {
-        ri.computeCellEstimateProbability();
-        ri.computeEstimatedCell();
+        if (!ri.stop) {
+            ri.computeCellEstimateProbability();
+            ri.computeEstimatedCell();
+        }
     }
 
     for (let ri of robots) {
-        const dx = random.integer(-steps, steps);
-        const dy = random.integer(-steps, steps);
-        ri.move(dx, dy);
+        if (!ri.stop) {
+            const dx = random.integer(-steps, steps);
+            const dy = random.integer(-steps, steps);
+            ri.move(dx, dy);
+        }
         ri.draw();
     }
 
     for (let ri of robots) {
-        ri.computeAlpha(robots, M);
+        if (!ri.stop)
+            ri.computeAlpha(robots, M);
     }
 }
 
@@ -148,9 +157,11 @@ function get_estimated_cells() {
     let res = [];
     for (let ri of robots) {
         let real_area = check_area(ri);
+        if (!unstable_phase)
+            ri.stop = ri.estimated_cell === real_area;
         let tag1 = ri.estimated_cell === real_area ? '<u>' : '';
         let tag2 = ri.estimated_cell === real_area ? '</u>' : '';
-        let str = `<b>${ri.id}</b> : ${ri.estimated_cell} vs ${real_area}`;
+        let str = `<b>${ri.id}</b> : ${ri.estimated_cell}/${real_area}`;
         arr.push(tag1 + str + tag2);
     }
 
